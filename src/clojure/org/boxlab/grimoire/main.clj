@@ -22,7 +22,8 @@
                                     :id ::buttom}
                      [:edit-text {:id ::form
                                   :hint "How do you do?"}]
-                     [:button {:text "Post"}]]])
+                     [:button {:text "Post"
+                               :on-click (fn [_] (future (post (get-elmt ::form))))}]]])
 
 (def signup-layout [:linear-layout {:orientation :vertical
                                     :id-holder true
@@ -33,20 +34,22 @@
                        [:button {:Text "Submit"
                                  :on-click (fn [_] 
                                              (do
-                                               (future
-                                                 (gen-tokens (get-elmt ::form))
-                                                 (gen-twitter)
-                                                 ;(gen-twitterstream listener)
-                                                 ;(start)
-                                                 (on-ui
-                                                   (set-content-view! a
-                                                     (make-ui main-layout))))))}]]
+                                               (await
+                                                 (future
+                                                   (do
+                                                     (gen-tokens (get-elmt ::form))
+                                                     (gen-twitter))))
+                                               ;(gen-twitterstream listener)
+                                               ;(start)
+                                               (on-ui
+                                                 (set-content-view! a
+                                                   (make-ui main-layout)))))}]]
                      [:button {:Text "Open oauth signup page"
                                :on-click (fn [_]
-                                           (on-ui
-                                             (.startActivity a 
-                                                (Intent. Intent/ACTION_VIEW 
-                                                  (Uri/parse (. @oauthtoken getAuthorizationURL))))))}]])
+                                           (future
+                                             (.loadUrl (take-elmt ::webview)
+                                               (. @oauthtoken getAuthorizationURL))))}]
+                     [:web-view {:id ::webview}]])
                     
 
 (defactivity org.boxlab.grimoire.CoreActivity
@@ -57,20 +60,16 @@
       (future
         (get-oauthtoken!))
       ; token„Çísharedpreference„Å´
-      (reset! tokens 
-        (get-shared-preferences "tokens" :world-writeable))
-      (if (try
-            (.. @tokens getAll isEmpty)
-            (catch Exception e nil))
+      (reset! sp 
+        (get-shared-preferences "default" :world-writeable))
+      ; ÉgÅ[ÉNÉìÇì«Ç›çûÇ›
+      (reset! tokens
+        (load-string (.. @sp (getString "tokens" ""))))
+      (if @tokens
+        (on-ui
+          (set-content-view! a
+            (make-ui main-layout)))
         (do
           (on-ui
             (set-content-view! a
-              (make-ui signup-layout)))
-          (future
-            (on-ui
-              (.startActivity a 
-                 (Intent. Intent/ACTION_VIEW 
-                   (Uri/parse (. @oauthtoken getAuthorizationURL)))))))
-        (on-ui
-          (set-content-view! a
-            (make-ui main-layout)))))))
+              (make-ui signup-layout))))))))

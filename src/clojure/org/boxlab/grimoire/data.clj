@@ -9,7 +9,7 @@
   :inherits :view)
 
 ; twitter
-(def tokens 
+(def tokens
   (atom nil))
 (def oauthtoken
   (atom nil))
@@ -67,3 +67,5 @@
 (def nervous
   "Use dialog warning"
   (atom false))
+(def sp 
+  (atom nil))

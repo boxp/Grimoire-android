@@ -20,15 +20,13 @@
 (defn post 
   "引数の文字列を全て一つにまとめてツイートする．140文字以上の時は省略されます．"
   [& input]
-  (try 
-    (str "Success:" 
-      (.getText 
-        (.updateStatus @twitter 
-          (if 
-            (> (count (seq (apply str input))) 140)
-              (str (apply str (take 137 (seq (apply str input)))) "...")
-              (apply str input)))))
-    (catch Exception e (println "Something has wrong." e))))
+  (str "Success:" 
+    (.getText 
+      (.updateStatus @twitter 
+        (if 
+          (> (count (seq (apply str input))) 140)
+            (str (apply str (take 137 (seq (apply str input)))) "...")
+            (apply str input))))))
 
 ; 20件のツイート取得
 (defn showtl 
