@@ -1,7 +1,8 @@
 (ns org.boxlab.grimoire.oauth
+  (:refer-clojure :exclude [assoc!])
   (:use [org.boxlab.grimoire.data]
         [neko.notify]
-        [neko.data :only [get-shared-preferences]])
+        [neko.data])
   (:import (twitter4j Status Twitter TwitterFactory TwitterException)
            (twitter4j.auth AccessToken OAuthAuthorization)
            (twitter4j.conf ConfigurationContext)))
@@ -25,7 +26,7 @@
        (do  
          (let 
            [twitterTokens (.getOAuthAccessToken auth @oauthtoken pin)
-            esp (. sp edit)
+            esp (. @sp edit)
             token-map {:token (.getToken twitterTokens)
                        :tokenSecret (.getTokenSecret twitterTokens)}]
            (do

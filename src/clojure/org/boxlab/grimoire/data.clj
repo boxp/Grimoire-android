@@ -4,7 +4,7 @@
 ; android ui
 (declare ^android.widget.LinearLayout body)
 
-(defelement :web-view
+(defelement  :web-view
   :classname android.webkit.WebView
   :inherits :view)
 

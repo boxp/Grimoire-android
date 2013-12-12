@@ -4,6 +4,7 @@
         [neko.ui :only [make-ui]]
         [neko.application :only [defapplication]]
         [neko.data]
+        [neko.notify]
         [org.boxlab.grimoire.commands]
         [org.boxlab.grimoire.data]
         [org.boxlab.grimoire.oauth])
@@ -12,6 +13,7 @@
 
 (declare ^android.app.Activity a)
 
+; メインレイアウト
 (def main-layout [:linear-layout {:orientation :vertical
                                   :id-holder true
                                   :def `body}
@@ -22,9 +24,23 @@
                                     :id ::buttom}
                      [:edit-text {:id ::form
                                   :hint "How do you do?"}]
+                     [:button {:text "λ"
+                               :on-click (fn [_] 
+                                           (on-ui
+                                             (toast
+                                               (str
+                                                 (try
+                                                   (binding [*ns* (find-ns 'org.boxlab.grimoire.main)]
+                                                     (load-string 
+                                                       (get-elmt ::form)))
+                                                   (catch Exception e (. e getMessage)))))))}]
                      [:button {:text "Post"
-                               :on-click (fn [_] (future (post (get-elmt ::form))))}]]])
+                               :on-click (fn [_] 
+                                           (future 
+                                             (post 
+                                               (get-elmt ::form))))}]]])
 
+; アカウント認証レイアウト
 (def signup-layout [:linear-layout {:orientation :vertical
                                     :id-holder true
                                     :def `body}
@@ -34,19 +50,21 @@
                        [:button {:Text "Submit"
                                  :on-click (fn [_] 
                                              (do
-                                               (await
-                                                 (future
-                                                   (do
-                                                     (gen-tokens (get-elmt ::form))
-                                                     (gen-twitter))))
+                                               ; トークンの生成
+                                               (future
+                                                 (gen-tokens (get-elmt ::form)))
+                                               ; twitterインスタンスの生成
+                                               (future
+                                                 (gen-twitter))
                                                ;(gen-twitterstream listener)
                                                ;(start)
+                                               ; 画面変移
                                                (on-ui
                                                  (set-content-view! a
                                                    (make-ui main-layout)))))}]]
                      [:button {:Text "Open oauth signup page"
                                :on-click (fn [_]
-                                           (future
+                                           (on-ui
                                              (.loadUrl (take-elmt ::webview)
                                                (. @oauthtoken getAuthorizationURL))))}]
                      [:web-view {:id ::webview}]])
@@ -57,19 +75,20 @@
   :on-create
   (fn [this bundle]
     (do 
+      ; oauthtokenを生成
       (future
         (get-oauthtoken!))
       ; tokenをsharedpreferenceに
       (reset! sp 
         (get-shared-preferences "default" :world-writeable))
-      ; �g�[�N����ǂݍ���
+      ; メイントークンを生成
       (reset! tokens
         (load-string (.. @sp (getString "tokens" ""))))
+      ; 画面を変移
       (if @tokens
         (on-ui
           (set-content-view! a
             (make-ui main-layout)))
-        (do
-          (on-ui
-            (set-content-view! a
-              (make-ui signup-layout))))))))
+        (on-ui
+          (set-content-view! a
+            (make-ui signup-layout)))))))
