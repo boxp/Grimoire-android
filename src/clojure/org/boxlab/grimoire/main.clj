@@ -65,8 +65,9 @@
                      [:button {:Text "Open oauth signup page"
                                :on-click (fn [_]
                                            (on-ui
-                                             (.loadUrl (take-elmt ::webview)
-                                               (. @oauthtoken getAuthorizationURL))))}]
+                                             (.startActivity a
+                                               (Intent. Intent/ACTION_VIEW
+                                                 (Uri/parse (. @oauthtoken getAuthorizationURL))))))}]
                      [:web-view {:id ::webview}]])
                     
 
